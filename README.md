@@ -68,8 +68,8 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-# big-red-refills
- Making our dining hall's staff's job a bit easier when it comes to refilling drinks
+# the-refill-app
+ Making our dining hall's staff's job a bit easier when it comes to refilling items in the dining hall
 
  Setup:
 
