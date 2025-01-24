@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { ref, onValue, update, get } from 'firebase/database';
-
-import { database } from './firebase';
-
+import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { ref, onValue, update, get } from "firebase/database";
+import { database } from "./firebase";
 import {
   Box,
   TextField,
@@ -12,10 +10,10 @@ import {
   Container,
   Paper,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions
-} from '@mui/material';
+  DialogActions,
+  Divider,
+} from "@mui/material";
 
 interface Item {
   itemName: string;
@@ -24,39 +22,32 @@ interface Item {
 
 function StudentFacing() {
   const [searchParams] = useSearchParams();
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
-  const station = searchParams.get('station') || '';
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle phone number submission logic here
-    console.log('Phone number submitted:', phoneNumber);
-  };
+  const station = searchParams.get("station") || "";
 
   const handlePhoneSubmit = () => {
     const itemRef = ref(database, `items`);
     get(itemRef).then((snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const matchingItem = Object.entries(data).find(([_, item]) => 
+        const matchingItem = Object.entries(data).find(([_, item]) =>
           (item as Item).itemName === station
         );
-        
+
         if (matchingItem) {
           const [key, item] = matchingItem as [string, Item];
           const currentPhones = item.phones || {};
           const newPhones = {
             ...currentPhones,
-            [Object.keys(currentPhones).length]: phoneNumber
+            [Object.keys(currentPhones).length]: phoneNumber,
           };
-          
+
           update(ref(database, `items/${key}`), {
-            phones: newPhones
+            phones: newPhones,
           });
-          
-          // Clear phone number after submission
-          setPhoneNumber('');
+
+          setPhoneNumber("");
         }
       }
     });
@@ -64,117 +55,111 @@ function StudentFacing() {
   };
 
   const handleConfirmClick = () => {
-    // First set status to Refill
     const itemRef = ref(database, `items`);
     get(itemRef).then((snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const matchingItem = Object.entries(data).find(([_, item]) => 
+        const matchingItem = Object.entries(data).find(([_, item]) =>
           (item as Item).itemName === station
         );
-        
+
         if (matchingItem) {
           const [key] = matchingItem;
           update(ref(database, `items/${key}`), {
-            status: "Refill"
+            status: "Refill",
           });
         }
       }
     });
-    // Then open dialog for phone number
     setOpenDialog(true);
   };
 
-  const translator = {"regularmilk": "the Regular milk", "skimmilk": "the Skim milk", "chocolatemilk": "the Chocolate milk"}
+  const translator = {
+    regularmilk: "the Regular milk",
+    skimmilk: "the Skim milk",
+    chocolatemilk: "the Chocolate milk",
+  };
 
   return (
     <Container
-  maxWidth={false}
-  disableGutters
+    maxWidth={false}
+    disableGutters
+    sx={{
+      height: "100vh",
+      width: "100vw",
+      background: "linear-gradient(145deg, #121212, #1a1a1a, #303030, #4a4a70)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 0,
+      margin: 0,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+    }}
+  >
+   <Paper
+  elevation={6}
   sx={{
-    height: '100vh',
-    width: '100vw',
-    backgroundColor: '#000000', // Ensure it's black
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 0,
-    padding: 0,
-    position: 'absolute', // Ensure it covers the viewport
-    top: 0,
-    left: 0,
+    width: "100%",
+    maxWidth: "400px",
+    padding: 4,
+    backgroundColor: "#1e1e1e",
+    borderRadius: "16px",
+    border: "2px solid rgba(255, 255, 255, 0.3)", // White border with transparency
+    boxShadow: "0 8px 20px rgba(0, 0, 0, 0.8), 0 0 10px rgba(90, 90, 90, 0.3)",
+    animation: "fade-in 0.5s ease-in-out", // Subtle fade-in
   }}
 >
-      <Paper 
-        elevation={3}
-        sx={{
-          width: '100%',
-          maxWidth: '400px',
-          padding: 4,
-          backgroundColor: '#1e1e1e',
-          borderRadius: 2,
-          margin: '0 16px'
-        }}
-      >
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <Typography
+          variant="h5"
+          align="center"
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 3
+            color: "#ffffff",
+            fontFamily: "'Fira Code', monospace",
+            textShadow: "0 0 6px rgba(255, 255, 255, 0.3)",
           }}
         >
-          <Typography 
-            variant="h4" 
-            align="center"
-            sx={{ 
-              color: '#ffffff',
-              marginBottom: 2
-            }}
-          >
-            Is {translator[station]} empty?
-          </Typography>
-
-          <Button 
-            type="button"
-            variant="contained"
-            size="large"
-            onClick={handleConfirmClick}
-            sx={{
-              backgroundColor: '#90caf9', 
-              color: '#000',
-              '&:hover': {
-                backgroundColor: '#64b5f6',
-              },
-              padding: '12px',
-              fontSize: '1.1rem'
-            }}
-          >
-            Confirm
-          </Button>
-        </Box>
-      </Paper>
-
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogContent>
-          <Typography sx={{ color: '#000', mb: 2 }}>
-            OPTIONAL: Enter your phone number to be notified when this item is refilled
-          </Typography>
-          <TextField
-            fullWidth
-            label="Phone Number"
-            variant="outlined"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Skip</Button>
-          <Button onClick={handlePhoneSubmit} variant="contained">Submit</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+          Is {translator[station]} empty?
+        </Typography>
+  
+        <Divider
+          sx={{
+            borderColor: "rgba(255, 255, 255, 0.2)",
+            borderStyle: "dashed",
+          }}
+        />
+  
+        <Button
+          type="button"
+          variant="contained"
+          size="large"
+          onClick={handleConfirmClick}
+          sx={{
+            background: "linear-gradient(90deg, #90caf9, #64b5f6)",
+            color: "#000",
+            borderRadius: "12px",
+            fontWeight: "bold",
+            padding: "12px 0",
+            fontSize: "1.2rem",
+            textTransform: "uppercase",
+            transition: "all 0.3s",
+            "&:hover": {
+              background: "linear-gradient(90deg, #64b5f6, #90caf9)",
+              transform: "scale(1.05)", // Slight scale-up on hover
+            },
+            "&:active": {
+              transform: "scale(0.95)", // Slight scale-down on click
+            },
+          }}
+        >
+          Confirm
+        </Button>
+      </Box>
+    </Paper>
+  </Container>
+  
   );
 }
 
