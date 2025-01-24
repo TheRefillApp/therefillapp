@@ -59,7 +59,7 @@ function RefillTable() {
     sx={{
       height: '100vh',
       width: '100vw',
-      backgroundColor: '#000000',
+      backgroundColor: '#2d2d34',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -74,16 +74,19 @@ function RefillTable() {
      <TableContainer
   component={Paper}
   sx={{
-    borderRadius: '0px 16px 16px 0px', // Rounded corners only for the bottom-right
+    borderRadius: '16px 16px 16px 16px', // Rounded corners only for the bottom-right
     overflow: 'hidden', // Ensure content stays within the container
-    backgroundColor: '#1E1E1E', // Table container background
+    backgroundColor: '#34353c', // Table container background
     boxShadow: `
-      4px 4px 20px 6px rgba(255, 255, 255, 0.8),  /* Right border fade */
-      4px 4px 40px 12px rgba(0, 0, 0, 0.8)        /* Bottom shadow fade */
+      inset 0 0 1px 0.5px hsla(0, 0%, 100%, 0.075), /* Increased size and opacity */
+      /* shadow ring 👇 */
+      0 0 0 2px hsla(0, 0%, 0%, 0.2), /* Increased ring thickness and opacity */
+      /* multiple soft shadows 👇 */
+      0 0.6px 0.8px hsla(0, 0%, 0%, 0.2), /* Slightly larger and darker */
+      0 1.8px 3px hsla(0, 0%, 0%, 0.25), /* Adjusted to be more prominent */
+      0 7px 12px hsla(0, 0%, 0%, 0.3); /* More intense large shadow */
     `,
-    borderRight: '6px solid rgba(255, 255, 255, 0.8)', // Thicker white border on the right
-    borderBottom: '6px solid rgba(255, 255, 255, 0.8)', // Thicker white border on the bottom
-    width: '90%', // Adjust table width
+    width: '80%', // Adjust table width
     margin: '0 auto', // Center horizontally
     position: 'relative',
   }}
@@ -96,9 +99,9 @@ function RefillTable() {
             borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
             color: '#fff',
             fontFamily: "'Josefin Sans', sans-serif",
-            fontSize: '1.8rem', // Larger font size
+            fontSize: '2.5rem', // Larger font size
             fontWeight: 700, // Bold text
-            padding: '24px 32px',
+            padding: '36px 36px',
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
           }}
         >
@@ -109,9 +112,9 @@ function RefillTable() {
             borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
             color: '#fff',
             fontFamily: "'Josefin Sans', sans-serif",
-            fontSize: '1.8rem', // Larger font size
+            fontSize: '2.5rem', // Larger font size
             fontWeight: 700, // Bold text
-            padding: '24px 32px',
+            padding: '36px 36px',
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
           }}
         >
@@ -161,11 +164,11 @@ function RefillTable() {
     color: '#ffffff',
     height: '80px', // Keep button height
     width: '400px', // Set a fixed width
-    fontSize: '1.6rem',
+    fontSize: '2rem',
     fontFamily: "'Josefin Sans', sans-serif",
     fontWeight: 700,
     textTransform: 'none',
-    borderRadius: '8px', // Adjusted for a cleaner look
+    borderRadius: '40px', // Adjusted for a cleaner look
     transition: 'all 0.3s ease',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
     '&:hover': {
