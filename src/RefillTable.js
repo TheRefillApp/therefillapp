@@ -242,7 +242,7 @@ function RefillTable() {
             fontSize: '1.1rem',
             fontWeight: 300
           }}>
-              Are you sure you want to mark{' '}
+              Are you sure you want to mark the{' '}
   <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
     {confirmPopup.itemId
       ? translator[items.find((item) => item.id === confirmPopup.itemId)?.itemName]
