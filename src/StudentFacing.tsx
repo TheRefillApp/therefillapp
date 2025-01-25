@@ -75,9 +75,9 @@ function StudentFacing() {
   };
 
   const translator = {
-    regularmilk: "the Regular milk",
-    skimmilk: "the Skim milk",
-    chocolatemilk: "the Chocolate milk",
+    regularmilk: "the regular milk",
+    skimmilk: "the skim milk",
+    chocolatemilk: "the chocolate milk",
   };
 
   return (
