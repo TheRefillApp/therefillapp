@@ -133,6 +133,16 @@ function RefillTable() {
         >
           Item
         </TableCell>
+        <TableCell sx={{
+            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+            color: '#fff',
+            fontFamily: "'Josefin Sans', sans-serif",
+            fontSize: '2.5rem', // Larger font size
+            fontWeight: 700, // Bold text
+            padding: '36px 36px',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          }}
+        >Request</TableCell>
         <TableCell
           sx={{
             borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
@@ -146,16 +156,7 @@ function RefillTable() {
         >
           Status
         </TableCell>
-        <TableCell sx={{
-            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
-            color: '#fff',
-            fontFamily: "'Josefin Sans', sans-serif",
-            fontSize: '2.5rem', // Larger font size
-            fontWeight: 700, // Bold text
-            padding: '36px 36px',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          }}
-        >Request</TableCell>
+        
 
       </TableRow>
     </TableHead>
@@ -181,6 +182,21 @@ function RefillTable() {
           >
             {translator[item.itemName]}
           </TableCell>
+          <TableCell sx={{
+              color: '#fff',
+              fontFamily: "'Josefin Sans', sans-serif",
+              fontSize: '1.5rem', // Larger font size
+              fontWeight: 400, // Bold text
+              padding: '24px 32px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+                  <i>
+                    {calculateMinutesAgo(item.timeAgo) !== "N/A" ? 
+                      `${item.requests} requests starting ${calculateMinutesAgo(item.timeAgo)} minutes ago` 
+                      : ""}
+                  </i>
+                </TableCell>
           <TableCell
             sx={{
               color: '#fff',
@@ -222,19 +238,7 @@ function RefillTable() {
   {item.status === 'Refill' ? 'Refill' : 'Filled'}
 </Button>
           </TableCell>
-          <TableCell sx={{
-              color: '#fff',
-              fontFamily: "'Josefin Sans', sans-serif",
-              fontSize: '1.5rem', // Larger font size
-              fontWeight: 400, // Bold text
-              padding: '24px 32px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-                  <i>
-                    {calculateMinutesAgo(item.timeAgo) !== "N/A" ? "First requested " + calculateMinutesAgo(item.timeAgo) + " minutes ago" : ""}
-                  </i>
-                </TableCell>
+          
         </TableRow>
       ))}
     </TableBody>

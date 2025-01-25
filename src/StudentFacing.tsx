@@ -20,6 +20,7 @@ interface Item {
   phones?: Record<string, string>;
   timeAgo?: string;
   status?: string;
+  requests?: number;
 }
 
 function StudentFacing() {
@@ -72,11 +73,14 @@ function StudentFacing() {
           if ((item as Item).timeAgo === "N/A") {
               update(ref(database, `items/${key}`), {
                   status: "Refill",
-                  timeAgo: new Date().toISOString(), // Update with current time
+                  timeAgo: new Date().toISOString(),
+                  requests: ((item as Item).requests || 0) + 1 // Add default value of 0
               });
           } else {
               update(ref(database, `items/${key}`), {
                   status: "Refill",
+                  requests: ((item as Item).requests || 0) + 1 // Add default value of 0
+
               });
           }
         }
