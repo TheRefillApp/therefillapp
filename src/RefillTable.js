@@ -193,7 +193,7 @@ function RefillTable() {
           >
                   <i>
                     {calculateMinutesAgo(item.timeAgo) !== "N/A" ? 
-                      `${item.requests} requests starting ${calculateMinutesAgo(item.timeAgo)} minutes ago` 
+                      `${item.requests} request(s) starting ${calculateMinutesAgo(item.timeAgo)} minutes ago` 
                       : ""}
                   </i>
                 </TableCell>
