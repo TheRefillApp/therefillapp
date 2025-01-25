@@ -61,6 +61,9 @@ function RefillTable() {
       width: '100vw',
       backgroundColor: '#2d2d34',
       display: 'flex',
+      flexDirection: 'column', // Added to stack elements vertically
+      alignItems: 'center', // Center horizontally
+      justifyContent: 'flex-start', // Start stacking from the top
       alignItems: 'center',
       justifyContent: 'center',
       margin: 0,
@@ -71,10 +74,25 @@ function RefillTable() {
       fontFamily: "'Josefin Sans', sans-serif",
      //perspective: '1500px' // Add perspective for 3D effect
     }}>
+
+{/* Header */}
+<Typography
+      variant="h2"
+      sx={{
+        color: '#ffffff',
+        fontFamily: "'Josefin Sans', sans-serif",
+        fontWeight: 700,
+        fontSize: '5rem',
+        marginBottom: '50px', // Space below the header
+        textAlign: 'center',
+      }}
+    >
+      Milk Refill Status
+    </Typography>
      <TableContainer
   component={Paper}
   sx={{
-    borderRadius: '16px 16px 16px 16px', // Rounded corners only for the bottom-right
+    borderRadius: '30px', // Rounded corners only for the bottom-right
     overflow: 'hidden', // Ensure content stays within the container
     backgroundColor: '#34353c', // Table container background
     boxShadow: `
@@ -137,7 +155,7 @@ function RefillTable() {
               color: '#fff',
               fontFamily: "'Josefin Sans', sans-serif",
               fontSize: '2.5rem', // Larger font size
-              fontWeight: 700, // Bold text
+              fontWeight: 400, // Bold text
               padding: '24px 32px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             }}
@@ -163,8 +181,8 @@ function RefillTable() {
     backgroundColor: item.status === 'Refill' ? '#e53935' : '#4caf50',
     color: '#ffffff',
     height: '80px', // Keep button height
-    width: '400px', // Set a fixed width
-    fontSize: '2rem',
+    width: '300px', // Set a fixed width
+    fontSize: '2.25rem',
     fontFamily: "'Josefin Sans', sans-serif",
     fontWeight: 700,
     textTransform: 'none',
@@ -209,9 +227,11 @@ function RefillTable() {
       >
         <DialogTitle style={{ 
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          padding: '24px',
-          fontSize: '1.5rem',
-          fontWeight: 300
+          padding: '16px',
+          fontSize: '2rem',
+          fontWeight: 400,
+          textAlign: 'center',
+          color: '#fff'
         }}>
           Confirm Status Change
         </DialogTitle>
@@ -222,7 +242,13 @@ function RefillTable() {
             fontSize: '1.1rem',
             fontWeight: 300
           }}>
-            Are you sure you want to mark this as "Filled"?
+              Are you sure you want to mark{' '}
+  <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
+    {confirmPopup.itemId
+      ? translator[items.find((item) => item.id === confirmPopup.itemId)?.itemName]
+      : 'this'}
+  </span>{' '}
+  as Filled? Only confirm this change if the item will be immediately refilled.
           </DialogContentText>
         </DialogContent>
         <DialogActions style={{ padding: '24px' }}>
@@ -249,7 +275,7 @@ function RefillTable() {
             color="primary" 
             autoFocus
             style={{
-              backgroundColor: '#5c6bc0',
+              backgroundColor: '#e53935',
               borderRadius: '8px',
               padding: '8px 24px',
               fontFamily: "'Josefin Sans', sans-serif",
@@ -264,6 +290,23 @@ function RefillTable() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Typography
+      variant="body1"
+      sx={{
+        color: '#9e9e9e', // Light gray text
+        fontFamily: "'Josefin Sans', sans-serif",
+        fontSize: '1.1rem',
+        marginTop: '50px', // Space above the paragraph
+        textAlign: 'center',
+        maxWidth: '70%', // Limit paragraph width
+      }}
+    >
+      Refill/Red: Indicates that a student has reported that the machine is empty. Press the button of the station(s) or items you are going to refill. 
+      **Only press the button if you are going to refill the machine or items, as students will be notified**
+      <br /><br /> Filled/Green: Indicates that no students have reported that the machine is empty. **Machine may still be empty even when the machine has the status "Filled"**
+    </Typography>
+
     </Container>
   );
 }
