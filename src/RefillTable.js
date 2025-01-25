@@ -11,10 +11,8 @@ function RefillTable() {
   const [items, setItems] = useState([]);
   const [confirmPopup, setConfirmPopup] = useState({ show: false, itemId: null });
 
-  const translator = {"regularmilk": "Regular Milk", "skimmilk": "Skim Milk", "chocolatemilk": "Chocolate Milk"}
+  const translator = { "2percentmilk": "2% Milk", "skimmilk": "Skim Milk", "chocolatemilk": "Chocolate Milk" };
 
-
-  // Fetch data from Firebase on component mount and set up real-time listener
   useEffect(() => {
     const itemsRef = ref(database, 'items');
     onValue(itemsRef, (snapshot) => {
@@ -26,17 +24,26 @@ function RefillTable() {
     });
   }, []);
 
-  // Listen for changes to 'requests' and update 'status' accordingly
+  const calculateMinutesAgo = (timeAgo) => {
+    if (!timeAgo || timeAgo === "N/A") return "N/A";
+    const now = new Date();
+    const pastTime = new Date(timeAgo);
+    const diffMs = now - pastTime;
+    return Math.floor(diffMs / 60000); // Convert ms to minutes
+  };
+
   useEffect(() => {
-    items.forEach((item) => {
-      const itemRef = ref(database, `items/${item.id}`);
-      //if (item.requests > 0 && item.status !== 'Refill') {
-       // update(itemRef, { status: 'Refill' });
-      //} else if (item.requests === 0 && item.status !== 'Filled') {
-        //update(itemRef, { status: 'Filled' });
-      //}
-    });
-  }, [items]);
+    const interval = setInterval(() => {
+      setItems((prevItems) =>
+        prevItems.map((item) => ({
+          ...item,
+          minutesAgo: calculateMinutesAgo(item.timeAgo),
+        }))
+      );
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleStatusClick = (item) => {
     if (item.status === "Refill") {
@@ -47,10 +54,11 @@ function RefillTable() {
   const confirmStatusChange = () => {
     if (confirmPopup.itemId) {
       const itemRef = ref(database, `items/${confirmPopup.itemId}`);
-      update(itemRef, { status: "Filled", requests: 0, phones: {0:0} });
+      update(itemRef, { status: "Filled", requests: 0, timeAgo: "N/A" });
     }
     setConfirmPopup({ show: false, itemId: null });
   };
+
 
   return (
     <Container 
@@ -138,6 +146,17 @@ function RefillTable() {
         >
           Status
         </TableCell>
+        <TableCell sx={{
+            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+            color: '#fff',
+            fontFamily: "'Josefin Sans', sans-serif",
+            fontSize: '2.5rem', // Larger font size
+            fontWeight: 700, // Bold text
+            padding: '36px 36px',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          }}
+        >Request</TableCell>
+
       </TableRow>
     </TableHead>
     <TableBody>
@@ -203,6 +222,19 @@ function RefillTable() {
   {item.status === 'Refill' ? 'Refill' : 'Filled'}
 </Button>
           </TableCell>
+          <TableCell sx={{
+              color: '#fff',
+              fontFamily: "'Josefin Sans', sans-serif",
+              fontSize: '1.5rem', // Larger font size
+              fontWeight: 400, // Bold text
+              padding: '24px 32px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+                  <i>
+                    {calculateMinutesAgo(item.timeAgo) !== "N/A" ? "First requested " + calculateMinutesAgo(item.timeAgo) + " minutes ago" : ""}
+                  </i>
+                </TableCell>
         </TableRow>
       ))}
     </TableBody>

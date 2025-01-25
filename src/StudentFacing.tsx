@@ -18,6 +18,8 @@ import {
 interface Item {
   itemName: string;
   phones?: Record<string, string>;
+  timeAgo?: string;
+  status?: string;
 }
 
 function StudentFacing() {
@@ -64,10 +66,19 @@ function StudentFacing() {
         );
 
         if (matchingItem) {
-          const [key] = matchingItem;
-          update(ref(database, `items/${key}`), {
-            status: "Refill",
-          });
+          const [key, item] = matchingItem;
+
+          // Check if timeAgo is not "N/A"
+          if ((item as Item).timeAgo === "N/A") {
+              update(ref(database, `items/${key}`), {
+                  status: "Refill",
+                  timeAgo: new Date().toISOString(), // Update with current time
+              });
+          } else {
+              update(ref(database, `items/${key}`), {
+                  status: "Refill",
+              });
+          }
         }
       }
     });
@@ -75,7 +86,7 @@ function StudentFacing() {
   };
 
   const translator = {
-    regularmilk: "the regular milk",
+    regularmilk: "the 2% milk",
     skimmilk: "the skim milk",
     chocolatemilk: "the chocolate milk",
   };
