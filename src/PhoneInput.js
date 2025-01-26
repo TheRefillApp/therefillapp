@@ -1,71 +1,47 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ref, onValue, update, get } from "firebase/database";
+import { ref, update, get } from "firebase/database";
 import { database } from "./firebase";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Container,
-  Paper,
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Divider,
-} from "@mui/material";
+import { TextField, Button, Box, Typography, Container, Paper } from "@mui/material";
 
-interface Item {
-  itemName: string;
-  phones?: Record<string, string>;
-  timeAgo?: string;
-  status?: string;
-  requests?: number;
-}
-
-function StudentFacing() {
+function PhoneInput() {
   const [searchParams] = useSearchParams();
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [openDialog, setOpenDialog] = useState(false);
-  const station = searchParams.get("station") || "";
   const navigate = useNavigate();
+  const station = searchParams.get("station") || "";
+  const [error, setError] = useState(false);
 
-  const handleConfirmClick = () => {
+  const handleSubmit = () => {
+    const phoneRegex = /^\+?[\d\s\-()]{10,15}$/; 
+    if (!phoneRegex.test(phoneNumber)) {
+      setError(true);
+      return;
+    }
     const itemRef = ref(database, `items`);
     get(itemRef).then((snapshot) => {
       const data = snapshot.val();
       if (data) {
         const matchingItem = Object.entries(data).find(([_, item]) =>
-          (item as Item).itemName === station
+          (item.itemName === station)
         );
 
         if (matchingItem) {
           const [key, item] = matchingItem;
+          const currentPhones = item.phones || {};
+          const newPhones = {
+            ...currentPhones,
+            [Object.keys(currentPhones).length]: phoneNumber,
+          };
 
-          // Check if timeAgo is not "N/A"
-          if ((item as Item).timeAgo === "N/A") {
-              update(ref(database, `items/${key}`), {
-                  status: "Refill",
-                  timeAgo: new Date().toISOString(),
-                  requests: ((item as Item).requests || 0) + 1 // Add default value of 0
-              });
-          } else {
-              update(ref(database, `items/${key}`), {
-                  status: "Refill",
-                  requests: ((item as Item).requests || 0) + 1 // Add default value of 0
-
-              });
-          }
+          update(ref(database, `items/${key}`), { phones: newPhones });
         }
       }
     });
-    navigate("/phone-input"+`?station=${station}`);
+    navigate("/thank-you");
   };
 
-  const translator = {
-    regularmilk: "the 2% milk",
-    skimmilk: "the skim milk",
-    chocolatemilk: "the chocolate milk",
+  const handleSkip = () => {
+    navigate("/thank-you");
   };
 
   return (
@@ -98,7 +74,7 @@ function StudentFacing() {
           animation: "fade-in 0.5s ease-in-out",
         }}
       >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "center" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
           <Typography
             fontSize={30}
             align="center"
@@ -107,8 +83,9 @@ function StudentFacing() {
               fontFamily: "'Josefin Sans', sans-serif",
             }}
             padding={.5}
+
           >
-            Confirm Action
+            Get Notified?
           </Typography>
           <Typography
             fontSize={20}
@@ -119,22 +96,44 @@ function StudentFacing() {
             }}
             padding={.5}
           >
-            Is {translator[station]} empty? Staff will be notified to refill it.
+            Get notified when your milk has been refilled
           </Typography>
+          <TextField
+            value={phoneNumber}
+             onChange={(e) => {
+                setPhoneNumber(e.target.value)
+                setError(false);
+            }}
+            label="Phone Number (Optional)"
+            error={error}
+            helperText={error ? "Please enter a valid phone number" : ""}
+          />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row", 
+              gap: 2, 
+              justifyContent: "space-between", 
+            }}
+          >
+          <Button 
+            onClick={handleSkip}
+            style={{ fontSize: "1.2rem", color: '#0096ff', fontWeight: 400, textTransform: 'none' }}
+          >Skip</Button>
           <Button
             type="button"
             variant="contained"
             size="large"
-            onClick={handleConfirmClick}
+            onClick={handleSubmit}
             sx={{
               background: "#0096ff",
               color: "#fff",
-              width: "80%",
               borderRadius: "12px",
+              fontSize: "1.2rem",
               fontWeight: 400,
-              padding: "10px 12px",
+              padding: "12px 12",
               textTransform: "none",
-              fontSize: "1.3rem",
+              fontSize: "1.2rem",
               transition: "all 0.3s",
               "&:hover": {
                 background: "#0096ff",
@@ -145,12 +144,14 @@ function StudentFacing() {
               },
             }}
           >
-            Confirm
+            Submit
           </Button>
+          </Box>
         </Box>
       </Paper>
     </Container>
   );
 }
 
-export default StudentFacing;
+export default PhoneInput;
+
