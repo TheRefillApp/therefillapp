@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ref, onValue, update, get } from "firebase/database";
 import { database } from "./firebase";
+import { getFunctions, httpsCallable } from "firebase/functions";
+
 import {
   Box,
   TextField,
@@ -30,36 +32,33 @@ function StudentFacing() {
   const station = searchParams.get("station") || "";
   const navigate = useNavigate();
 
-  const handleConfirmClick = () => {
-    const itemRef = ref(database, `items`);
-    get(itemRef).then((snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const matchingItem = Object.entries(data).find(([_, item]) =>
-          (item as Item).itemName === station
-        );
-
-        if (matchingItem) {
-          const [key, item] = matchingItem;
-
-          // Check if timeAgo is not "N/A"
-          if ((item as Item).timeAgo === "N/A") {
-              update(ref(database, `items/${key}`), {
-                  status: "Refill",
-                  timeAgo: new Date().toISOString(),
-                  requests: ((item as Item).requests || 0) + 1 // Add default value of 0
-              });
-          } else {
-              update(ref(database, `items/${key}`), {
-                  status: "Refill",
-                  requests: ((item as Item).requests || 0) + 1 // Add default value of 0
-
-              });
-          }
-        }
+  interface ConfirmResponse {
+    success?: boolean;
+    message?: string;
+    error?: string;
+  }
+  
+  const handleConfirmClick = async () => {
+    const functions = getFunctions();
+    const handleConfirmClickFunc = httpsCallable<{ station: string }, ConfirmResponse>(
+      functions, 
+      "handleConfirmClick"
+    );
+  
+    try {
+      const response = await handleConfirmClickFunc({ station });
+      const data = response.data as ConfirmResponse; // Explicitly cast response data
+  
+      if (data.success) {
+        console.log("Status updated successfully:", data.message);
+      } else {
+        console.error("Error updating status:", data.error);
       }
-    });
-    navigate("/phone-input"+`?station=${station}`);
+    } catch (error) {
+      console.error("Function call failed:", error);
+    }
+  
+    navigate("/phone-input" + `?station=${station}`);
   };
 
   const translator = {

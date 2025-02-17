@@ -6,6 +6,8 @@ import {Container,
   Button, Dialog, DialogActions, DialogContent, DialogContentText,
   DialogTitle, Paper, Typography
 } from '@mui/material';
+import { getFunctions, httpsCallable } from "firebase/functions";
+
 
 function RefillTable() {
   const [items, setItems] = useState([]);
@@ -17,6 +19,7 @@ function RefillTable() {
     const itemsRef = ref(database, 'items');
     onValue(itemsRef, (snapshot) => {
       const data = snapshot.val();
+      console.log(data)
       if (data) {
         const formattedData = Object.keys(data).map(key => ({ id: key, ...data[key] }));
         setItems(formattedData);
@@ -51,13 +54,27 @@ function RefillTable() {
     }
   };
 
-  const confirmStatusChange = () => {
-    if (confirmPopup.itemId) {
-      const itemRef = ref(database, `items/${confirmPopup.itemId}`);
-      update(itemRef, { status: "Filled", requests: 0, timeAgo: "N/A" });
+
+const confirmStatusChange = async () => {
+  if (confirmPopup.itemId) {
+    console.log("In Refill Table, calling function");
+    const functions = getFunctions();
+    const confirmStatusChangeFunc = httpsCallable(functions, "confirmStatusChange");
+
+    try {
+      const response = await confirmStatusChangeFunc({ itemId: confirmPopup.itemId });
+      if (response.data.success) {
+        console.log("Status updated successfully:", response.data.message);
+      } else {
+        console.error("Error updating status:", response.data.error);
+      }
+    } catch (error) {
+      console.error("Function call failed:", error);
     }
-    setConfirmPopup({ show: false, itemId: null });
-  };
+  }
+  setConfirmPopup({ show: false, itemId: null });
+};
+
 
 
   return (
