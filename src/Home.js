@@ -10,16 +10,28 @@ function Home() {
         Refill Table (Worker facing)
       </p></a>
 
-      <a href={"/student-facing?station=2percentmilk"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
-        2% Milk (User facing)
+      <a href={"/student-facing?station=2percentmilk1"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
+        2% Milk 1 (User facing)
       </p></a>
 
-      <a href={"/student-facing?station=skimmilk"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
-        Skim Milk (User facing)
+      <a href={"/student-facing?station=skimmilk1"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
+        Skim Milk 1 (User facing)
       </p></a>
 
-      <a href={"/student-facing?station=chocolatemilk"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
-        Chocolate Milk (User facing)
+      <a href={"/student-facing?station=chocolatemilk1"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
+        Chocolate Milk 1 (User facing)
+      </p></a>
+
+      <a href={"/student-facing?station=2percentmilk2"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
+        2% Milk 2 (User facing)
+      </p></a>
+
+      <a href={"/student-facing?station=skimmilk2"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
+        Skim Milk 2 (User facing)
+      </p></a>
+
+      <a href={"/student-facing?station=chocolatemilk2"}>  <p style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '18px', margin: '10px 0' }}>
+        Chocolate Milk 2 (User facing)
       </p></a>
        
     </div>

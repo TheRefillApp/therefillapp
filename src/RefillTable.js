@@ -13,7 +13,7 @@ function RefillTable() {
   const [items, setItems] = useState([]);
   const [confirmPopup, setConfirmPopup] = useState({ show: false, itemId: null });
 
-  const translator = { "2percentmilk": "2% Milk", "skimmilk": "Skim Milk", "chocolatemilk": "Chocolate Milk" };
+  const translator = { "2percentmilk1": "2% Milk 1", "skimmilk1": "Skim Milk 1", "chocolatemilk1": "Chocolate Milk 1", "2percentmilk2": "2% Milk 2", "skimmilk2": "Skim Milk 2", "chocolatemilk2": "Chocolate Milk 2" };
 
   useEffect(() => {
     const itemsRef = ref(database, 'items');
@@ -23,6 +23,8 @@ function RefillTable() {
       if (data) {
         const formattedData = Object.keys(data).map(key => ({ id: key, ...data[key] }));
         setItems(formattedData);
+      } else {
+        console.log()
       }
     });
   }, []);
