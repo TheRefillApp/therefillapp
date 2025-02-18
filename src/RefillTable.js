@@ -4,7 +4,7 @@ import { ref, onValue, update, get } from 'firebase/database';
 import {Container,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, Dialog, DialogActions, DialogContent, DialogContentText,
-  DialogTitle, Paper, Typography
+  DialogTitle, Paper, Typography, Box
 } from '@mui/material';
 import { getFunctions, httpsCallable } from "firebase/functions";
 
@@ -13,7 +13,7 @@ function RefillTable() {
   const [items, setItems] = useState([]);
   const [confirmPopup, setConfirmPopup] = useState({ show: false, itemId: null });
 
-  const translator = { "2percentmilk1": "2% Milk 1", "skimmilk1": "Skim Milk 1", "chocolatemilk1": "Chocolate Milk 1", "2percentmilk2": "2% Milk 2", "skimmilk2": "Skim Milk 2", "chocolatemilk2": "Chocolate Milk 2" };
+  const translator = { "2percentmilk1": ["2% Milk", "Station 1"], "skimmilk1": ["Skim Milk", "Station 1"], "chocolatemilk1": ["Chocolate Milk", "Station 1"], "2percentmilk2": ["2% Milk", "Station 2"], "skimmilk2": ["Skim Milk", "Station 2"], "chocolatemilk2": ["Chocolate Milk", "Station 2"],};
 
   useEffect(() => {
     const itemsRef = ref(database, 'items');
@@ -147,6 +147,7 @@ function RefillTable() {
         fontFamily: "'Josefin Sans', sans-serif",
         fontWeight: 700,
         fontSize: '5rem',
+        marginTop: '50px', // Space above the header
         marginBottom: '50px', // Space below the header
         textAlign: 'center',
       }}
@@ -185,20 +186,11 @@ function RefillTable() {
             fontWeight: 700, // Bold text
             padding: '36px 36px',
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            width: '50%', // Adjusted for a cleaner look
           }}
         >
           Item
         </TableCell>
-        <TableCell sx={{
-            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
-            color: '#fff',
-            fontFamily: "'Josefin Sans', sans-serif",
-            fontSize: '2.5rem', // Larger font size
-            fontWeight: 700, // Bold text
-            padding: '36px 36px',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          }}
-        >Request</TableCell>
         <TableCell
           sx={{
             borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
@@ -232,33 +224,29 @@ function RefillTable() {
               fontFamily: "'Josefin Sans', sans-serif",
               fontSize: '2.5rem', // Larger font size
               fontWeight: 400, // Bold text
-              padding: '24px 32px',
+              padding: '10px 32px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
-            {translator[item.itemName]}
+        <Box>
+          <Box sx={{ fontSize: '2rem', fontWeight: 'bold' }}>
+            {translator[item.itemName][0]}
+          </Box>
+          <Box sx={{ fontSize: '1.25rem', color: '#9e9e9e' }}>
+            {translator[item.itemName][1]}
+          </Box>
+        </Box>
+
+            
           </TableCell>
-          <TableCell sx={{
-              color: '#fff',
-              fontFamily: "'Josefin Sans', sans-serif",
-              fontSize: '1.5rem', // Larger font size
-              fontWeight: 400, // Bold text
-              padding: '24px 32px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-                  <i>
-                    {calculateMinutesAgo(item.timeAgo) !== "N/A" ? 
-                      `${item.requests} request(s) starting ${calculateMinutesAgo(item.timeAgo)} minutes ago` 
-                      : ""}
-                  </i>
-                </TableCell>
+
           <TableCell
             sx={{
               color: '#fff',
               fontFamily: "'Josefin Sans', sans-serif",
-              fontSize: '1.6rem', // Larger font size
-              fontWeight: 700, // Bold text
+              fontSize: '1rem', // Larger font size
+              fontWeight: 400, // Bold text
+              
               padding: '24px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             }}
@@ -271,11 +259,12 @@ function RefillTable() {
   sx={{
     backgroundColor: item.status === 'Refill' ? '#e53935' : '#4caf50',
     color: '#ffffff',
-    height: '80px', // Keep button height
-    width: '300px', // Set a fixed width
-    fontSize: '2.25rem',
+    height: '70px', // Keep button height
+    width: '260px', // Set a fixed width
+    fontSize: '2rem',
     fontFamily: "'Josefin Sans', sans-serif",
     fontWeight: 700,
+    marginBottom: '8px', // Space below the button
     textTransform: 'none',
     borderRadius: '40px', // Adjusted for a cleaner look
     transition: 'all 0.3s ease',
@@ -293,6 +282,19 @@ function RefillTable() {
 >
   {item.status === 'Refill' ? 'Refill' : 'Filled'}
 </Button>
+<Box
+    component="i"
+    sx={{
+      display: 'block', // Ensures it goes on a new line
+      fontSize: '0.9rem', // Smaller text
+      color: '#9e9e9e', // Gray text
+      marginTop: '4px', // Small spacing above
+    }}
+  >
+    {calculateMinutesAgo(item.timeAgo) !== "N/A" ? 
+      `${item.requests} request(s) starting ${calculateMinutesAgo(item.timeAgo)} minutes ago` 
+      : ""}
+  </Box>
           </TableCell>
           
         </TableRow>
@@ -337,7 +339,13 @@ function RefillTable() {
               Are you sure you want to mark the{' '}
   <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
     {confirmPopup.itemId
-      ? translator[items.find((item) => item.id === confirmPopup.itemId)?.itemName]
+      ? translator[items.find((item) => item.id === confirmPopup.itemId)?.itemName][0]
+      : 'this'}
+  </span>{' '}
+  at 
+  {' '}<span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
+    {confirmPopup.itemId
+      ? translator[items.find((item) => item.id === confirmPopup.itemId)?.itemName][1]
       : 'this'}
   </span>{' '}
   as Filled? Only confirm this change if the item will be immediately refilled.
@@ -388,12 +396,14 @@ function RefillTable() {
       sx={{
         color: '#9e9e9e', // Light gray text
         fontFamily: "'Josefin Sans', sans-serif",
-        fontSize: '1.1rem',
-        marginTop: '50px', // Space above the paragraph
+        fontSize: '.9rem',
+        marginTop: '20px', // Space above the paragraph
         textAlign: 'center',
-        maxWidth: '70%', // Limit paragraph width
+        maxWidth: '80%', // Limit paragraph width
       }}
     >
+      Station 1: Milk Station near the exit <span style={{ margin: '0 20px' }}>•</span>  Station 2: Milk station near North End Pizza
+      <br /><br />
       Refill/Red: Indicates that a student has reported that the machine is empty. Press the button of the station(s) or items you are going to refill. 
       **Only press the button if you are going to refill the machine or items, as students will be notified**
       <br /><br /> Filled/Green: Indicates that no students have reported that the machine is empty. **Machine may still be empty even when the machine has the status "Filled"**

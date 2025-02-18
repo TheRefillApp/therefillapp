@@ -101,6 +101,7 @@ function PhoneInput() {
                 setPhoneNumber(e.target.value)
                 setError(false);
             }}
+            type="tel"
             label="Phone Number (Optional)"
             error={error}
             helperText={error ? "Please enter a valid phone number" : ""}
