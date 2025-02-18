@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { database } from './firebase';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, onValue, update, get } from 'firebase/database';
 import {Container,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, Dialog, DialogActions, DialogContent, DialogContentText,
@@ -55,14 +55,51 @@ function RefillTable() {
   };
 
 
-const confirmStatusChange = async () => {
-  if (confirmPopup.itemId) {
+  const confirmStatusChange = async () => {
+    if (!confirmPopup.itemId) return;
+  
     console.log("In Refill Table, calling function");
+  
     const functions = getFunctions();
     const confirmStatusChangeFunc = httpsCallable(functions, "confirmStatusChange");
-
+    const sendNotificationFunc = httpsCallable(functions, "sendNotification");
+  
     try {
+      // Fetch item details from Firebase RTDB to get the list of phone numbers
+      const itemRef = ref(database, `items/${confirmPopup.itemId}`);
+      const snapshot = await get(itemRef);
+  
+      if (!snapshot.exists()) {
+        console.error("Error: Item not found in RTDB.");
+        return;
+      }
+  
+      const itemData = snapshot.val();
+      const phoneNumbers = itemData.phones ? Object.values(itemData.phones) : [];
+  
+      if (phoneNumbers.length === 0) {
+        console.log("No phone numbers found for notifications.");
+      } else {
+        console.log(`Sending notifications to ${phoneNumbers.length} users...`);
+        
+        // Send notifications to each phone number
+        for (const phoneNumber of phoneNumbers) {
+          try {
+            const notificationResponse = await sendNotificationFunc({ number: phoneNumber });
+            if (notificationResponse.data.success) {
+              console.log(`Notification sent to ${phoneNumber}`);
+            } else {
+              console.error(`Failed to send notification to ${phoneNumber}:`, notificationResponse.data.error);
+            }
+          } catch (notificationError) {
+            console.error(`Error sending notification to ${phoneNumber}:`, notificationError);
+          }
+        }
+      }
+  
+      // After sending notifications, update the item status
       const response = await confirmStatusChangeFunc({ itemId: confirmPopup.itemId });
+  
       if (response.data.success) {
         console.log("Status updated successfully:", response.data.message);
       } else {
@@ -71,9 +108,9 @@ const confirmStatusChange = async () => {
     } catch (error) {
       console.error("Function call failed:", error);
     }
-  }
-  setConfirmPopup({ show: false, itemId: null });
-};
+  
+    setConfirmPopup({ show: false, itemId: null });
+  };
 
 
 

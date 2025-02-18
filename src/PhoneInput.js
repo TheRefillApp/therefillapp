@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ref, update, get } from "firebase/database";
 import { database } from "./firebase";
 import { TextField, Button, Box, Typography, Container, Paper } from "@mui/material";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 function PhoneInput() {
   const [searchParams] = useSearchParams();
@@ -11,33 +12,29 @@ function PhoneInput() {
   const station = searchParams.get("station") || "";
   const [error, setError] = useState(false);
 
-  const handleSubmit = () => {
-    const phoneRegex = /^\+?[\d\s\-()]{10,15}$/; 
+  const handleSubmit = async () => {
+    const phoneRegex = /^\+?[\d\s\-()]{10,15}$/;
     if (!phoneRegex.test(phoneNumber)) {
       setError(true);
       return;
     }
-    const itemRef = ref(database, `items`);
-    get(itemRef).then((snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const matchingItem = Object.entries(data).find(([_, item]) =>
-          (item.itemName === station)
-        );
-
-        if (matchingItem) {
-          const [key, item] = matchingItem;
-          const currentPhones = item.phones || {};
-          const newPhones = {
-            ...currentPhones,
-            [Object.keys(currentPhones).length]: phoneNumber,
-          };
-
-          update(ref(database, `items/${key}`), { phones: newPhones });
-        }
+  
+    const functions = getFunctions();
+    const handleSubmitFunc = httpsCallable(functions, "handleSubmit");
+  
+    try {
+      const response = await handleSubmitFunc({ phoneNumber, station });
+      const data = response.data;
+  
+      if (data.success) {
+        console.log("Phone number added successfully:", data.message);
+        navigate("/thank-you");
+      } else {
+        console.error("Error updating phone number:", data.error);
       }
-    });
-    navigate("/thank-you");
+    } catch (error) {
+      console.error("Function call failed:", error);
+    }
   };
 
   const handleSkip = () => {

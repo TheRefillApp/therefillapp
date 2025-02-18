@@ -12,10 +12,9 @@ if (!admin.apps.length) {
 require("dotenv").config();
 
 // Load Twilio credentials from environment variables
-const accountSid = defineString("TWILIO_ACCOUNT_SID");
-const authToken = defineString("TWILIO_AUTH_TOKEN");
-const messagingServiceSid = defineString("TWILIO_MESSAGING_SERVICE_SID");
-
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
 // Ensure credentials exist before initializing Twilio client
 if (!accountSid || !authToken || !messagingServiceSid) {
   logger.error("Missing Twilio credentials in environment variables.");
@@ -28,6 +27,8 @@ exports.sendNotification = onCall(
     enforceAppCheck: true, // Ensures App Check validation
   },
   async (request) => {
+    logger.info("Loaded Environment Variable: ", accountSid);
+
     const client = twilio(accountSid, authToken);
 
     // Validate input
@@ -74,7 +75,7 @@ exports.confirmStatusChange = onCall(
       const itemRef = database.ref(`items/${itemId}`);
       
       // Update the item in RTDB
-      await itemRef.update({ status: "Filled", requests: 0, timeAgo: "N/A" });
+      await itemRef.update({ status: "Filled", requests: 0, timeAgo: "N/A", phones: [] });
 
       //logger.info(`Item ${itemId} successfully updated by user ${uid}`);
       return { success: true, message: "Item status updated successfully." };
@@ -82,6 +83,73 @@ exports.confirmStatusChange = onCall(
     } catch (error) {
       //logger.error(`Failed to update item ${itemId}:`, error);
       return { error: "Failed to update item status. Please try again." };
+    }
+  }
+);
+
+exports.handleSubmit = onCall(
+  {
+    enforceAppCheck: true, // Ensures App Check validation
+  },
+  async (request) => {
+    const database = admin.database();
+
+    // Ensure user is authenticated
+   
+
+    const { phoneNumber, station } = request.data;
+    const phoneRegex = /^\+?[\d\s\-()]{10,15}$/;
+
+    if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
+      logger.error("Invalid phone number format:", phoneNumber);
+      return { error: "Invalid phone number format." };
+    }
+
+    if (!station) {
+      logger.error("Invalid request: Missing station.");
+      return { error: "Invalid request. Missing station name." };
+    }
+
+    try {
+      const itemsRef = database.ref("items");
+      const snapshot = await itemsRef.get();
+
+      if (!snapshot.exists()) {
+        return { error: "No items found in database." };
+      }
+
+      const data = snapshot.val();
+      let matchingKey = null;
+      let matchingItem = null;
+
+      // Find the item matching the station name
+      for (const [key, item] of Object.entries(data)) {
+        if (item.itemName === station) {
+          matchingKey = key;
+          matchingItem = item;
+          break;
+        }
+      }
+
+      if (!matchingKey || !matchingItem) {
+        return { error: `No matching item found for station: ${station}` };
+      }
+
+      // Update phone numbers
+      const currentPhones = matchingItem.phones || {};
+      const newPhones = {
+        ...currentPhones,
+        [Object.keys(currentPhones).length]: phoneNumber,
+      };
+
+      await database.ref(`items/${matchingKey}`).update({ phones: newPhones });
+
+      logger.info(`Phone number added successfully for station ${station}`);
+      return { success: true, message: "Phone number added successfully." };
+
+    } catch (error) {
+      logger.error("Error processing handleSubmit:", error);
+      return { error: "Failed to update phone number. Please try again." };
     }
   }
 );
