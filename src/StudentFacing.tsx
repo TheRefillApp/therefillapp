@@ -61,10 +61,13 @@ function StudentFacing() {
     navigate("/phone-input" + `?station=${station}`);
   };
 
-  const translator = {
-    regularmilk: "the 2% milk",
-    skimmilk: "the skim milk",
-    chocolatemilk: "the chocolate milk",
+  const translator = { 
+    "2percentmilk1": ["2% Milk", "Station 1"], 
+    "skimmilk1": ["Skim Milk", "Station 1"], 
+    "chocolatemilk1": ["Chocolate Milk", "Station 1"], 
+    "2percentmilk2": ["2% Milk", "Station 2"], 
+    "skimmilk2": ["Skim Milk", "Station 2"], 
+    "chocolatemilk2": ["Chocolate Milk", "Station 2"]
   };
 
   return (
@@ -118,7 +121,7 @@ function StudentFacing() {
             }}
             padding={.5}
           >
-            Is {translator[station]} empty? Staff will be notified to refill it.
+            Is the {translator[station][0]} empty? Staff will be notified to refill it.
           </Typography>
           <Button
             type="button"
