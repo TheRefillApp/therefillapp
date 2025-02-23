@@ -44,8 +44,10 @@ exports.sendNotification = onCall(
           "Notification Message:\n\n📢 Milk Refilled! 🥛\n\n" +
           "The milk dispenser you notified staff about has been refilled! " +
           "Thank you for letting us know! 😊",
+        sendAt: new Date(Date.now() + 310000).toISOString(),
         messagingServiceSid: messagingServiceSid,
         to: phoneNumber,
+        scheduleType: 'fixed'
       });
 
       logger.info(`Message sent successfully with SID: ${message.sid}`);
