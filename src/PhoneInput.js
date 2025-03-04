@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ref, update, get } from "firebase/database";
+import { ref, update, onValue, get } from "firebase/database";
 import { database } from "./firebase";
 import { TextField, Button, Box, Typography, Container, Paper } from "@mui/material";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import CancelRoundedIcon from "@mui/icons-material/CancelRounded"; 
 
 function PhoneInput() {
   const [searchParams] = useSearchParams();
@@ -11,7 +12,101 @@ function PhoneInput() {
   const navigate = useNavigate();
   const station = searchParams.get("station") || "";
   const [error, setError] = useState(false);
+  const [isLocked, setIsLocked] = useState(null);
 
+  useEffect(() => {
+    const lockRef = ref(database, "requests-locked");
+    const unsubscribe = onValue(lockRef, (snapshot) => {
+      setIsLocked(snapshot.val() === true);
+    });
+    return () => unsubscribe();
+  }, []);
+  if (isLocked === null) {
+      return (
+        <Container
+        maxWidth={false}
+        disableGutters
+        sx={{
+          height: "100vh",
+          width: "100vw",
+          background: "linear-gradient(145deg,#c2ffde,#7bd3f9)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+          margin: 0,
+          position: "absolute",
+          top: 0,
+          left: 0,
+        }}
+      ></Container>
+      );
+    }
+  if (isLocked) {
+    return (
+      <Container
+      maxWidth={false}
+      disableGutters
+      sx={{
+        height: "100vh",
+        width: "100vw",
+        background: "linear-gradient(145deg,#c2ffde,#7bd3f9)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 0,
+        margin: 0,
+        position: "absolute",
+        top: 0,
+        left: 0,
+      }}
+    >
+      <Paper
+        elevation={6}
+        sx={{
+          width: "70%",
+          maxWidth: "70%",
+          padding: 4,
+          backgroundColor: "fff",
+          borderRadius: "16px",
+          boxShadow: "0 4px 16px rgba(145, 144, 144, 0.5), 0 0 8px rgba(90, 90, 90, 0.2)",
+          animation: "fade-in 0.5s ease-in-out",
+        }}
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "center" }}>
+          <CancelRoundedIcon
+            sx={{
+              fontSize: 100, // Big icon
+              color: "#d32f2f", // Red color
+            }}
+          />
+          <Typography
+            fontSize={30}
+            align="center"
+            sx={{
+              color: "#000",
+              fontFamily: "'Josefin Sans', sans-serif",
+            }}
+            padding={.5}
+          >
+            Not Being Refilled
+          </Typography>
+          <Typography
+            fontSize={20}
+            align="center"
+            sx={{
+              color: "#000",
+              fontFamily: "'Josefin Sans', sans-serif",
+            }}
+            padding={.5}
+          >
+            We're sorry, the dining hall is closing soon and we are no longer refilling this item.
+          </Typography>
+        </Box>
+      </Paper>
+    </Container>
+    );
+  }
   const handleSubmit = async () => {
     const phoneRegex = /^\+?[\d\s\-()]{10,15}$/;
     if (!phoneRegex.test(phoneNumber)) {
