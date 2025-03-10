@@ -22,6 +22,54 @@ if (!accountSid || !authToken || !messagingServiceSid) {
   throw new Error("Twilio credentials are not properly configured.");
 }
 
+async function getDiningHours(date) {
+  const options = {
+    method: "GET",
+    url: "https://now.dining.cornell.edu/api/1.0/dining/eateries.json",
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+    },
+  };
+
+  try {
+    const response = await axios.request(options);
+    const formattedResponse = response.data.data.eateries.find((item) => item.id === 43)?.operatingHours || [];
+    const todaySchedule = formattedResponse.find((item) => item.date === date);
+
+    if (!todaySchedule || !todaySchedule.events) return [];
+
+    let events = todaySchedule.events.map((event) => ({
+      startTimestamp: event.startTimestamp,
+      endTimestamp: event.endTimestamp,
+    }));
+
+    events.sort((a, b) => a.startTimestamp - b.startTimestamp);
+
+    let mergedTimes = [];
+    for (let event of events) {
+      if (mergedTimes.length === 0) {
+        mergedTimes.push(event);
+      } else {
+        let last = mergedTimes[mergedTimes.length - 1];
+        if (last.endTimestamp === event.startTimestamp) {
+          last.endTimestamp = event.endTimestamp;
+        } else {
+          mergedTimes.push(event);
+        }
+      }
+    }
+
+    return mergedTimes.map((event) => ({
+      date: date,
+      startTime: moment.unix(event.startTimestamp).tz("America/New_York").format("HH:mm"),
+      endTime: moment.unix(event.endTimestamp - 1800).tz("America/New_York").format("HH:mm"),
+    }));
+  } catch (error) {
+    logger.error("Error fetching dining hours:", error);
+    return [];
+  }
+}
+
 exports.dynamicRequestLocking = onSchedule("every 1 minutes", async () => {
   const database = admin.database();
   try {
