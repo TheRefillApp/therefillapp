@@ -112,57 +112,68 @@ exports.dynamicRequestLocking = onSchedule("every 1 minutes", async () => {
   const database = admin.database();
   try {
     const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
-    const estDate = new Date(now); 
-
+    const estDate = new Date(now);
+    const currentDate = estDate.toISOString().split("T")[0];
     const currentHour = estDate.getHours().toString().padStart(2, "0");
     const currentMinute = estDate.getMinutes().toString().padStart(2, "0");
     const currentTime = `${currentHour}:${currentMinute}`;
 
-    const scheduleRef = database.ref("schedule");
+    const scheduleRef = database.ref(`schedule/${currentDate}/times`);
     const snapshot = await scheduleRef.get();
 
     if (!snapshot.exists()) {
-      logger.warn("No schedule found in database.");
+      logger.warn("No schedule found for today in database.");
       return;
     }
 
-    const { lockTime, unlockTime } = snapshot.val();
-    itemRef = database.ref("items");
-    if (currentTime === lockTime) {
-      await database.ref("requests-locked").set(true);
+    let lockTriggered = false;
+    let unlockTriggered = false;
 
-      const itemsRef = database.ref("items");
-      const itemsSnapshot = await itemsRef.get();
+    snapshot.forEach(async (childSnapshot) => {
+      const { startTime, endTime } = childSnapshot.val();
+      
+      if (currentTime === startTime) {
+        unlockTriggered = true;
+        await database.ref("requests-locked").set(false);
+        logger.info(`Requests unlocked at scheduled time: ${currentTime}`);
+      } else if (currentTime === endTime) {
+        lockTriggered = true;
+        await database.ref("requests-locked").set(true);
 
-      if (!itemsSnapshot.exists()) {
-        logger.warn("No items found in database.");
-        return;
-      }
-
-      const updates = {};
-      itemsSnapshot.forEach((childSnapshot) => {
-        const itemId = childSnapshot.key;
-        const itemData = childSnapshot.val() || {};
+        const itemsRef = database.ref("items");
+        const itemsSnapshot = await itemsRef.get();
         
-        updates[`items/${itemId}`] = {
-          ...itemData,
-          status: "Filled",
-          requests: 0,
-          timeAgo: "N/A",
-          phones: [],
-        };
-      });
+        if (!itemsSnapshot.exists()) {
+          logger.warn("No items found in database.");
+          return;
+        }
 
-      await database.ref().update(updates);
-      logger.info(`Requests locked and status reset at scheduled time: ${lockTime}`);
-    } else if (currentTime === unlockTime) {
-      await database.ref("requests-locked").set(false);
-      logger.info(`Requests unlocked at scheduled time: ${unlockTime}`);
-    }
+        const updates = {};
+        itemsSnapshot.forEach((childSnapshot) => {
+          const itemId = childSnapshot.key;
+          const itemData = childSnapshot.val() || {};
+          
+          updates[`items/${itemId}`] = {
+            ...itemData,
+            status: "Filled",
+            requests: 0,
+            timeAgo: "N/A",
+            phones: [],
+          };
+        });
+        
+        await database.ref().update(updates);
+        logger.info(`Requests locked and status reset at scheduled time: ${currentTime}`);
+
+        await scheduleRef.child(childSnapshot.key).remove();
+        logger.info(`Removed processed schedule time: ${startTime} - ${endTime}`);
+      }
+    });
   } catch (error) {
     logger.error("Error in scheduled request locking:", error);
   }
 });
+
 
 exports.sendNotification = onCall(
   {
