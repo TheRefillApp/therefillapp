@@ -74,7 +74,8 @@ async function getDiningHours(date) {
   }
 }
 
-exports.updateDiningSchedule = onSchedule("every 1 minutes", async () => {
+exports.updateDiningSchedule = onSchedule("every 24 hours", async () => {
+  const database = admin.database();
   const tomorrow = moment().tz("America/New_York").add(1, "days").format("YYYY-MM-DD");
   let diningTimes = await getDiningHours(tomorrow);
 
@@ -86,7 +87,7 @@ exports.updateDiningSchedule = onSchedule("every 1 minutes", async () => {
     ];
   }
 
-  const scheduleRef = db.ref("schedule");
+  const scheduleRef = database.ref("schedule");
   const dateRef = scheduleRef.child(tomorrow);
 
   try {
