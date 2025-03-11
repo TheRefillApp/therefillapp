@@ -4,14 +4,16 @@ import { ref, onValue, update, get } from 'firebase/database';
 import {Container,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Button, Dialog, DialogActions, DialogContent, DialogContentText,
-  DialogTitle, Paper, Typography, Box
+  DialogTitle, Paper, Typography, Box, CircularProgress
 } from '@mui/material';
 import { getFunctions, httpsCallable } from "firebase/functions";
+
 
 
 function RefillTable() {
   const [items, setItems] = useState([]);
   const [confirmPopup, setConfirmPopup] = useState({ show: false, itemId: null });
+  const [loading, setLoading] = useState(false);
 
   const translator = { 
     "2percentmilk1": ["2% Milk", "Station 1"], 
@@ -70,7 +72,7 @@ function RefillTable() {
     if (!confirmPopup.itemId) return;
   
     console.log("In Refill Table, calling function");
-  
+    setLoading(true);
     const functions = getFunctions();
     const confirmStatusChangeFunc = httpsCallable(functions, "confirmStatusChange");
     const sendNotificationFunc = httpsCallable(functions, "sendNotification");
@@ -118,9 +120,10 @@ function RefillTable() {
       }
     } catch (error) {
       console.error("Function call failed:", error);
+    } finally {
+      setLoading(false); 
+      setConfirmPopup({ show: false, itemId: null });
     }
-  
-    setConfirmPopup({ show: false, itemId: null });
   };
 
 
@@ -382,9 +385,11 @@ function RefillTable() {
             onClick={confirmStatusChange} 
             variant="contained" 
             color="primary" 
+            disabled={loading}
             autoFocus
             style={{
               backgroundColor: '#e53935',
+              minWidth: '100px',
               borderRadius: '8px',
               padding: '8px 24px',
               fontFamily: "'Josefin Sans', sans-serif",
@@ -395,7 +400,7 @@ function RefillTable() {
               }
             }}
           >
-            Confirm
+            {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Confirm"}
           </Button>
         </DialogActions>
       </Dialog>

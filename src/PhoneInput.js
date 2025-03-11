@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ref, update, onValue, get } from "firebase/database";
 import { database } from "./firebase";
-import { TextField, Button, Box, Typography, Container, Paper } from "@mui/material";
+import { TextField, Button, Box, Typography, Container, Paper, CircularProgress } from "@mui/material";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import CancelRoundedIcon from "@mui/icons-material/CancelRounded"; 
 
@@ -13,6 +13,7 @@ function PhoneInput() {
   const station = searchParams.get("station") || "";
   const [error, setError] = useState(false);
   const [isLocked, setIsLocked] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const lockRef = ref(database, "requests-locked");
@@ -113,6 +114,7 @@ function PhoneInput() {
       setError(true);
       return;
     }
+    setLoading(true);
   
     const functions = getFunctions();
     const handleSubmitFunc = httpsCallable(functions, "handleSubmit");
@@ -123,11 +125,14 @@ function PhoneInput() {
   
       if (data.success) {
         console.log("Phone number added successfully:", data.message);
+        setLoading(false);
         navigate("/thank-you");
       } else {
+        setLoading(false);
         console.error("Error updating phone number:", data.error);
       }
     } catch (error) {
+      setLoading(false);
       console.error("Function call failed:", error);
     }
   };
@@ -222,6 +227,8 @@ function PhoneInput() {
               background: "#0096ff",
               color: "#fff",
               borderRadius: "12px",
+              minHeight: "50px",
+              minWidth: "110px",
               fontSize: "1.2rem",
               fontWeight: 400,
               padding: "12px 12",
@@ -237,7 +244,7 @@ function PhoneInput() {
               },
             }}
           >
-            Submit
+            {loading ? <CircularProgress size={20} sx={{ color: "white"}} /> : "Submit"}
           </Button>
           </Box>
         </Box>

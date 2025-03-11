@@ -12,6 +12,7 @@ import {
   Typography,
   Container,
   Paper,
+  CircularProgress,
   Dialog,
   DialogContent,
   DialogActions,
@@ -33,6 +34,7 @@ function StudentFacing() {
   const [openDialog, setOpenDialog] = useState(false);
   const station = searchParams.get("station") || "";
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const lockRef = ref(database, "requests-locked");
@@ -140,6 +142,8 @@ function StudentFacing() {
       functions, 
       "handleConfirmClick"
     );
+
+    setLoading(true);
   
     try {
       const response = await handleConfirmClickFunc({ station });
@@ -153,7 +157,7 @@ function StudentFacing() {
     } catch (error) {
       console.error("Function call failed:", error);
     }
-  
+    setLoading(false);
     navigate("/phone-input" + `?station=${station}`);
   };
 
@@ -223,11 +227,14 @@ function StudentFacing() {
             type="button"
             variant="contained"
             size="large"
+            disabled={loading}
             onClick={handleConfirmClick}
             sx={{
               background: "#0096ff",
               color: "#fff",
               width: "80%",
+              minWidth: "241px",
+              minHeight: "56.4px",
               borderRadius: "12px",
               fontWeight: 400,
               padding: "10px 12px",
@@ -243,7 +250,7 @@ function StudentFacing() {
               },
             }}
           >
-            Confirm
+            {loading ? <CircularProgress size={24} sx={{ color: "white"}} /> : "Confirm"}
           </Button>
         </Box>
       </Paper>
