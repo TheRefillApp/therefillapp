@@ -2,7 +2,6 @@ const twilio = require("twilio");
 const { logger } = require("firebase-functions/v2");
 const { onCall } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
-const logger = require("firebase-functions/logger");
 const moment = require("moment-timezone");
 const axios = require("axios").default;
 const { defineInt, defineString } = require('firebase-functions/params');
@@ -36,10 +35,12 @@ async function getDiningHours(date) {
 
   try {
     const response = await axios.request(options);
-    const formattedResponse = response.data.data.eateries.find((item) => item.id === 43)?.operatingHours || [];
+    const formattedResponse = response.data.data.eateries.find(
+      (item) => item.id === 43
+    )?.operatingHours || [];
     const todaySchedule = formattedResponse.find((item) => item.date === date);
 
-    if (!todaySchedule || !todaySchedule.events) return [];
+    if (!todaySchedule || !todaySchedule.events) return null;
 
     let events = todaySchedule.events.map((event) => ({
       startTimestamp: event.startTimestamp,
@@ -48,6 +49,7 @@ async function getDiningHours(date) {
 
     events.sort((a, b) => a.startTimestamp - b.startTimestamp);
 
+    // Merge back-to-back events
     let mergedTimes = [];
     for (let event of events) {
       if (mergedTimes.length === 0) {
@@ -63,15 +65,47 @@ async function getDiningHours(date) {
     }
 
     return mergedTimes.map((event) => ({
-      date: date,
       startTime: moment.unix(event.startTimestamp).tz("America/New_York").format("HH:mm"),
       endTime: moment.unix(event.endTimestamp - 1800).tz("America/New_York").format("HH:mm"),
     }));
   } catch (error) {
     logger.error("Error fetching dining hours:", error);
-    return [];
+    return null;
   }
 }
+
+exports.updateDiningSchedule = onSchedule("every 1 minutes", async () => {
+  const tomorrow = moment().tz("America/New_York").add(1, "days").format("YYYY-MM-DD");
+  let diningTimes = await getDiningHours(tomorrow);
+
+  if (!diningTimes || diningTimes.length === 0) {
+    logger.warn("⚠️ WARNING: No dining hours found for", tomorrow, "- Using default times.");
+    diningTimes = [
+      { startTime: "07:00", endTime: "15:30" },
+      { startTime: "17:00", endTime: "20:00" }
+    ];
+  }
+
+  const scheduleRef = db.ref("schedule");
+  const dateRef = scheduleRef.child(tomorrow);
+
+  try {
+    const snapshot = await dateRef.once("value");
+    if (snapshot.exists()) {
+      logger.warn("⚠️ WARNING: Schedule already exists for", tomorrow, "- Skipping update.");
+      return null;
+    }
+    
+    await dateRef.set({ times: diningTimes });
+    logger.info("✅ SUCCESS: Updated schedule for", tomorrow);
+  } catch (error) {
+    logger.error("🚨 CRITICAL ERROR: Error updating Firebase schedule:", error);
+  }
+
+  return null;
+});
+
+
 
 exports.dynamicRequestLocking = onSchedule("every 1 minutes", async () => {
   const database = admin.database();
