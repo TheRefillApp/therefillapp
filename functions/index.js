@@ -122,7 +122,7 @@ exports.dynamicRequestLocking = onSchedule("every 1 minutes", async () => {
     const snapshot = await scheduleRef.get();
 
     if (!snapshot.exists()) {
-      logger.warn("No schedule found for today in database.");
+      logger.info("No schedule found for today in database.");
       return;
     }
 
